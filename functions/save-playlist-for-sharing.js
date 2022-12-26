@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
         const res = await axios.post(INSERT_ONE, data, {headers: getHeader()});
         const parsedRes = res.data.insertedId;
         if(parsedRes){
-            return successResponse("Playlist save d successfully",{saved_data_id:Buffer.from(""+parsedRes._id).toString('base64')});
+            return successResponse("Playlist saved successfully",{saved_data_id:Buffer.from(""+parsedRes._id).toString('base64')});
         }
         else{
             return failedResponse("Unable to save playlist for sharing")
