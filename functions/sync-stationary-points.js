@@ -6,21 +6,31 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try{
         const body = JSON.parse(event.body)
-        console.log("***** "+body.stationary_points);
-        console.log("***** "+body.user_id);
+        const incoming_points = body.stationary_points ;
+
+        console.log("***** INCOMING POINTS: "+incoming_points);
+        console.log("***** USER ID: "+body.user_id);
 
 
-        const querry = {
-            "collection": "stationarypoints",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "filter":{
-                "user_id":""+body.user_id
+
+        const querryToGetAllExistingPoints = {"collection": "stationarypoints","database": "mocklocations","dataSource": "mocklocations","filter":{"user_id":""+body.user_id}}
+
+        const allPointsOfUser = await axios.post(FIND_ALL, querryToGetAllExistingPoints, { headers: getHeader() });
+        if(allPointsOfUser.data.documents){console.log("***** This user does have some documents")}
+        else{console.log("***** This user does not have any documents")}
+
+        /**
+         * Check weather element to be update or create
+         */
+        for(var i=0 ; i < incoming_points.length ; i++ ){
+            if( allPointsOfUser.data.documents.some(el => el.latitude == incoming_points[i].Latitude)){
+                elementsToUpdate.push(incoming_points[i])
+            }else{
+                elementsToCreate.push(incoming_points[i])
             }
         }
 
-        const allPointsOfUser = await axios.post(FIND_ALL, querry, { headers: getHeader() });
-        console.log("******* ", allPointsOfUser.data);
+        var elementsToUpdate = [] , elementsToCreate = [];
 
         return successResponse("Response is fetched successfully", body)
 
