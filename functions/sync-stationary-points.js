@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { getHeader } = require('../api-helper');
+const { FIND_ALL } = require('../api-helper/querryMethods');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
 
 exports.handler = async (event, context) => {
@@ -10,12 +11,19 @@ exports.handler = async (event, context) => {
 
 
         const data = {
-            "collection": "users",
+            "collection": "stationarypoints",
             "database": "mocklocations",
-            "dataSource": "mocklocations"
+            "dataSource": "mocklocations",
+            "filter":{
+                "user_id":""+body.user_id
+            }
         }
 
-        
+        const allPointsOfUser = await axios.post(FIND_ALL, data, { headers: getHeader() });
+        console.log("******* "+JSON.parse(allPointsOfUser));
+
+
+
         return successResponse("Response is fetched successfully", body)
 
     }catch(e){
