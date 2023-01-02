@@ -6,6 +6,16 @@ exports.handler = async (event, context) => {
     try{
         const body = JSON.parse(event.body)
         console.log("***** "+body.stationary_points);
+        console.log("***** "+body.user_id);
+
+
+        const data = {
+            "collection": "users",
+            "database": "mocklocations",
+            "dataSource": "mocklocations"
+        }
+
+        
         return successResponse("Response is fetched successfully", body)
 
     }catch(e){
