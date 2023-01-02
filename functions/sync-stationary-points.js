@@ -3,6 +3,8 @@ const { getHeader } = require('../api-helper');
 
 exports.handler = async (event, context) => {
 
+    console.log("***** This is for testing only ")
+
     return {
         statusCode: 200,
         body: JSON.stringify(
