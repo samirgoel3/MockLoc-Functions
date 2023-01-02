@@ -5,7 +5,7 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try{
         const body = JSON.parse(event.body)
-        console.log("***** "+body);
+        console.log("***** "+body.stationary_points);
         return successResponse("Response is fetched successfully", body)
 
     }catch(e){
