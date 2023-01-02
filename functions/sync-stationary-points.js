@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
         }
 
         const allPointsOfUser = await axios.post(FIND_ALL, data, { headers: getHeader() });
-        console.log("******* "+JSON.parse(allPointsOfUser));
+        console.log("******* "+allPointsOfUser);
 
         return successResponse("Response is fetched successfully", body)
 
