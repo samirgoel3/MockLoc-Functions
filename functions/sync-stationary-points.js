@@ -22,11 +22,10 @@ exports.handler = async (event, context) => {
         const allPointsOfUser = await axios.post(FIND_ALL, data, { headers: getHeader() });
         console.log("******* "+JSON.parse(allPointsOfUser));
 
-
-
         return successResponse("Response is fetched successfully", body)
 
     }catch(e){
+        console.log("******* Exception "+e.message);
         return failedResponse("Exception in sync-stationary-points " + e.message)
     }
 
