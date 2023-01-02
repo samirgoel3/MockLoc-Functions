@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
         console.log("***** "+body.user_id);
 
 
-        const data = {
+        const querry = {
             "collection": "stationarypoints",
             "database": "mocklocations",
             "dataSource": "mocklocations",
@@ -19,8 +19,8 @@ exports.handler = async (event, context) => {
             }
         }
 
-        const allPointsOfUser = await axios.post(FIND_ALL, data, { headers: getHeader() });
-        console.log("******* ", allPointsOfUser);
+        const allPointsOfUser = await axios.post(FIND_ALL, querry, { headers: getHeader() });
+        console.log("******* ", allPointsOfUser.data);
 
         return successResponse("Response is fetched successfully", body)
 
