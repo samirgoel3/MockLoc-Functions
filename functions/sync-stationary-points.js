@@ -22,6 +22,7 @@ exports.handler = async (event, context) => {
         /**
          * Check weather element to be update or create
          */
+        var elementsToUpdate = [] , elementsToCreate = [];
         for(var i=0 ; i < incoming_points.length ; i++ ){
             if( allPointsOfUser.data.documents.some(el => el.latitude == incoming_points[i].Latitude)){
                 elementsToUpdate.push(incoming_points[i])
@@ -31,6 +32,8 @@ exports.handler = async (event, context) => {
         }
 
         var elementsToUpdate = [] , elementsToCreate = [];
+        console.log("***** Elements to update", elementsToUpdate.length())
+        console.log("***** Elements to Insert", elementsToCreate.length())
 
         return successResponse("Response is fetched successfully", body)
 
