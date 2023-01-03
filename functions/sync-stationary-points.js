@@ -6,6 +6,7 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body)
+        if(!body.stationary_points || !body.user_id){ return failedResponse("Required Field missign | stationary_points |user_id")}
         const incoming_points = body.stationary_points;
 
         console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);

@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
         }
     } catch (e) {
-        return failedResponse("EXCEPTION in Google Maps API --> " + e.message)
+        return failedResponse("EXCEPTION in Videos and Articles API --> " + e.message)
     }
 }
 
