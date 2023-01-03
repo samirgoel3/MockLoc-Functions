@@ -6,77 +6,82 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body)
-        if(!body.stationary_points || !body.user_id){ return failedResponse("Required Field missign | stationary_points |user_id")}
-        const incoming_points = body.stationary_points;
+        if(!body.playlists || !body.user_id){ return failedResponse("Required Field missign | playlists |user_id")}
+        const incoming_playlists = body.playlists;
 
-        console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);
+        console.log("-----> Total Incoming playlist by user ID: " + body.user_id + ": " + incoming_playlists.length);
 
 
 
-        const querryToGetAllExistingPoints = { "collection": "stationarypoints", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
+        const querryToGetAllExistingPlaylists = { "collection": "stationaryplaylist", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
 
-        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetAllExistingPoints, { headers: getHeader() });
+        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetAllExistingPlaylists, { headers: getHeader() });
 
-        let allExistingPointsOfUser = axiosFindAllResponse.data.documents;
-        if (allExistingPointsOfUser.length != 0) { console.log("-----> This user does already have some saved documents", " length=" + allExistingPointsOfUser.length) }
-        else { console.log("-----> This user does not have any saved documents") }
+        let allExistingPlaylistsOfUser = axiosFindAllResponse.data.documents;
+        if (allExistingPlaylistsOfUser.length != 0) { console.log("-----> This user does already have some saved playlist", "length=" + allExistingPlaylistsOfUser.length) }
+        else { console.log("-----> This user does not have any saved playlist") }
 
         /**
          * Check weather element to be update or create
          */
         var elementsToUpdate = [], elementsToCreate = [];
-        for (var i = 0; i < incoming_points.length; i++) {
-            if (allExistingPointsOfUser.some(el => el.latitude == incoming_points[i].Latitude)) {
-                elementsToUpdate.push(incoming_points[i])
+        for (var i = 0; i < incoming_playlists.length; i++) {
+            if (allExistingPlaylistsOfUser.some(el => el.playlist_id == incoming_playlists[i].id)) {
+                elementsToUpdate.push(incoming_playlists[i])
             } else {
-                elementsToCreate.push(incoming_points[i])
+                elementsToCreate.push(incoming_playlists[i])
             }
         }
         console.log("-----> Elements to update", elementsToUpdate.length)
         console.log("-----> Elements to Insert", elementsToCreate.length)
 
+        console.log("-----> Element to update", JSON.stringify(elementsToUpdate))
+        console.log("-----> Element to create", JSON.stringify(elementsToCreate))
+        return successResponse("TESTING ", "testing")
 
-        if (elementsToUpdate.length > 0) {
-            let stationaryPointsToUpdate = getStationaryPointArrayToUpdateInDb(elementsToUpdate, body.user_id);
-            let stationaryPointToCreate = getStationaryPointArrayToAddInDb(elementsToCreate, allExistingPointsOfUser, body.user_id);
 
-            // deleting existing docs
-            const querryDeleteExistingPoints = { "collection": "stationarypoints", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
-            const deletedDocument = await axios.post(DELETE_MANY, querryDeleteExistingPoints, { headers: getHeader() })
-            console.log("-----> Existing Document Deleted: ", JSON.stringify(deletedDocument.data))
+        // if (elementsToUpdate.length > 0) {
+        //     let playlistsToUpdate = getPlaylistsArrayToUpdateInDb(elementsToUpdate, body.user_id);
+        //     let playlistsToCreate = getPlaylistsArrayToAddInDb(elementsToCreate, body.user_id);
 
-            // Collecting all existing and new point in single array 
-            const overallPointsToAddInDb = getOverallPoints(stationaryPointToCreate, stationaryPointsToUpdate, allExistingPointsOfUser);
-            console.log("-----> Overall ST Point need to add and update in DB: ", overallPointsToAddInDb.length);
+        //     // deleting existing docs
+        //     const querryDeleteExistingPoints = { "collection": "stationarypoints", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
+        //     const deletedDocument = await axios.post(DELETE_MANY, querryDeleteExistingPoints, { headers: getHeader() })
+        //     console.log("-----> Existing Document Deleted: ", JSON.stringify(deletedDocument.data))
 
-            // Inserting overall elements in DB 
-            const querryToInsertMultipleDocs = {
-                "collection": "stationarypoints",
-                "database": "mocklocations",
-                "dataSource": "mocklocations",
-                "documents": overallPointsToAddInDb
-            }
-            const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-            console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
-            return successResponse("Overall documents inserted response", overallInsertionResult.data);
+        //     // Collecting all existing and new point in single array 
+        //     const overallPointsToAddInDb = getOverallPoints(stationaryPointToCreate, stationaryPointsToUpdate, allExistingPointsOfUser);
+        //     console.log("-----> Overall ST Point need to add and update in DB: ", overallPointsToAddInDb.length);
 
-        } else {
-            if (elementsToCreate.length > 0) {
-                let stationaryPointToCreate = getStationaryPointArrayToAddInDb(elementsToCreate, allExistingPointsOfUser, body.user_id);
-                console.log("Overall ST Point need to add in DB: ", stationaryPointToCreate.length);
+        //     // Inserting overall elements in DB 
+        //     const querryToInsertMultipleDocs = {
+        //         "collection": "stationarypoints",
+        //         "database": "mocklocations",
+        //         "dataSource": "mocklocations",
+        //         "documents": overallPointsToAddInDb
+        //     }
+        //     const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
+        //     console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
+        //     return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
-                // Inserting overall elements in DB 
-                const querryToInsertMultipleDocs = {
-                    "collection": "stationarypoints",
-                    "database": "mocklocations",
-                    "dataSource": "mocklocations",
-                    "documents": stationaryPointToCreate
-                }
-                const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-                return successResponse("Stationary Points added successfully ", axiosResponse.data)
+        // }
+        //  else {
+        //     if (elementsToCreate.length > 0) {
+        //         let stationaryPointToCreate = getStationaryPointArrayToAddInDb(elementsToCreate, allExistingPointsOfUser, body.user_id);
+        //         console.log("Overall ST Point need to add in DB: ", stationaryPointToCreate.length);
 
-            }
-        }
+        //         // Inserting overall elements in DB 
+        //         const querryToInsertMultipleDocs = {
+        //             "collection": "stationarypoints",
+        //             "database": "mocklocations",
+        //             "dataSource": "mocklocations",
+        //             "documents": stationaryPointToCreate
+        //         }
+        //         const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
+        //         return successResponse("Stationary Points added successfully ", axiosResponse.data)
+
+        //     }
+        // }
     } catch (e) {
         console.log("******* Exception " + e.message);
         return failedResponse("Exception in sync-stationary-points " + e.message)
@@ -92,31 +97,24 @@ exports.handler = async (event, context) => {
  * @param {string} userId 
  * @returns this return a modulated custom object that matches object saved in DB
  */
-const getStationaryPointArrayToAddInDb = (elementsToCreate, allExistingPointsOfUser, userId) => {
-    let stationaryPointToCreate = [];
-    let counter = allExistingPointsOfUser.length;
+const getPlaylistsArrayToAddInDb = (elementsToCreate, userId) => {
+    let playlist_to_create = [];
     for (var i = 0; i < elementsToCreate.length; i++) {
-        stationaryPointToCreate.push({
-            user_id: "" + userId,
-            point_id: counter + 1,
-            name: elementsToCreate[i].Name,
-            description: elementsToCreate[i].Description,
-            latitude: elementsToCreate[i].Latitude,
-            longitude: elementsToCreate[i].Longitude,
-            geographic_address: elementsToCreate[i].geogrphicAddress,
-            icon: elementsToCreate[i].Icon,
-            timeZone: elementsToCreate[i].TimeZone,
-            is_favourite: elementsToCreate[i].IsFavourite,
-            hours_playback: elementsToCreate[i].HourPlayback,
-            playlist_linkage: elementsToCreate[i].PlayListLinkage,
-            selected_via: elementsToCreate[i].SelectedVia,
-            date: elementsToCreate[i].TimeStamp,
-            launches: elementsToCreate[i].launches,
-            sync_state: true
+        playlist_to_create.push({
+            user_id:userId,
+            playlist_id:elementsToCreate[i].stationaryPlaylistNames.id,
+            name:elementsToCreate[i].stationaryPlaylistNames.Name,
+            description:elementsToCreate[i].stationaryPlaylistNames.Description,
+            label_color:elementsToCreate[i].stationaryPlaylistNames.LabelColor,
+            time:elementsToCreate[i].stationaryPlaylistNames.Time,
+            points_count:elementsToCreate[i].stationaryPlaylistNames.Points,
+            favourite:elementsToCreate[i].stationaryPlaylistNames.Favourite,
+            loop:elementsToCreate[i].stationaryPlaylistNames.Loop,
+            playlist_points:elementsToCreate[i].stationaryPlaylistPoints,
+            sync_state:true
         })
-        counter = counter + 1;
     }
-    return stationaryPointToCreate;
+    return playlist_to_create;
 }
 
 
@@ -126,31 +124,26 @@ const getStationaryPointArrayToAddInDb = (elementsToCreate, allExistingPointsOfU
  * @param {string} userId 
  * @returns this return a modulated custom object that will update  saved in DB
  */
-const getStationaryPointArrayToUpdateInDb = (elementsToUpdate, userId) => {
-    let stationaryPointToUpdate = []
-    for (var i = 0; i < elementsToUpdate.length; i++) {
-        stationaryPointToUpdate.push(
-            {
-                user_id: userId,
-                point_id: "" + elementsToUpdate[i].id,
-                name: elementsToUpdate[i].Name,
-                description: elementsToUpdate[i].Description,
-                latitude: elementsToUpdate[i].Latitude,
-                longitude: elementsToUpdate[i].Longitude,
-                geographic_address: elementsToUpdate[i].geogrphicAddress,
-                icon: elementsToUpdate[i].Icon,
-                timeZone: elementsToUpdate[i].TimeZone,
-                is_favourite: elementsToUpdate[i].IsFavourite,
-                hours_playback: elementsToUpdate[i].HourPlayback,
-                playlist_linkage: elementsToUpdate[i].PlayListLinkage,
-                selected_via: elementsToUpdate[i].SelectedVia,
-                date: elementsToUpdate[i].TimeStamp,
-                launches: elementsToUpdate[i].launches,
-                sync_state: true
-            }
-        )
+const getPlaylistsArrayToUpdateInDb = (elementsToUpdate, userId) => {
+    let playlistsToUpdate = []
+    for(var i =0 ; i< elementsToUpdate.length ; i++){
+        let playlist = {
+            user_id:userId,
+            playlist_id:elementsToUpdate[i].stationaryPlaylistNames.id,
+            name:elementsToUpdate[i].stationaryPlaylistNames.Name,
+            description:elementsToUpdate[i].stationaryPlaylistNames.Description,
+            label_color:elementsToUpdate[i].stationaryPlaylistNames.LabelColor,
+            time:elementsToUpdate[i].stationaryPlaylistNames.Time,
+            points_count:elementsToUpdate[i].stationaryPlaylistNames.Points,
+            favourite:elementsToUpdate[i].stationaryPlaylistNames.Favourite,
+            loop:elementsToUpdate[i].stationaryPlaylistNames.Loop,
+            playlist_points:elementsToUpdate[i].stationaryPlaylistPoints,
+            sync_state:true
+        }
+        
+        playlistsToUpdate.push(playlist)
     }
-    return stationaryPointToUpdate;
+    return playlistsToUpdate;
 
 }
 
