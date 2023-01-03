@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
 
             // Collecting all existing and new point in single array 
             const overallPlaylistsToAddInDb = getOverallPoints(playlistsToCreate, playlistsToUpdate, allExistingPlaylistsOfUser);
-            console.log("-----> Overall ST Point need to add and update in DB: ", overallPlaylistsToAddInDb.length);
+            console.log("-----> Overall Playlists need to add or update in DB: ", overallPlaylistsToAddInDb.length);
 
             // Inserting overall elements in DB 
             const querryToInsertMultipleDocs = {
@@ -61,23 +61,23 @@ exports.handler = async (event, context) => {
             return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
         }
-        // else {
-        //     if (elementsToCreate.length > 0) {
-        //         let stationaryPointToCreate = getStationaryPointArrayToAddInDb(elementsToCreate, allExistingPointsOfUser, body.user_id);
-        //         console.log("Overall ST Point need to add in DB: ", stationaryPointToCreate.length);
+        else {
+            if (elementsToCreate.length > 0) {
+                let stationaryPlaylistToCreate = getPlaylistsArrayToAddInDb(elementsToCreate, body.user_id);
+                console.log("Overall Playlist need to add in DB: ", stationaryPlaylistToCreate.length);
 
-        //         // Inserting overall elements in DB 
-        //         const querryToInsertMultipleDocs = {
-        //             "collection": "stationarypoints",
-        //             "database": "mocklocations",
-        //             "dataSource": "mocklocations",
-        //             "documents": stationaryPointToCreate
-        //         }
-        //         const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-        //         return successResponse("Stationary Points added successfully ", axiosResponse.data)
+                // Inserting overall elements in DB 
+                const querryToInsertMultipleDocs = {
+                    "collection": "stationaryplaylist",
+                    "database": "mocklocations",
+                    "dataSource": "mocklocations",
+                    "documents": stationaryPlaylistToCreate
+                }
+                const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
+                return successResponse("Stationary Points added successfully ", axiosResponse.data)
 
-        //     }
-        // }
+            }
+        }
     } catch (e) {
         console.log("******* Exception " + e.message);
         return failedResponse("Exception in sync-stationary-points " + e.message)
