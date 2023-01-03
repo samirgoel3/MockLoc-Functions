@@ -13,7 +13,7 @@ exports.handler = async (event, context) => {
             return getAllStationaryPoints(body.user_id)
         }
     } catch (e) {
-        return failedResponse("EXCEPTION in get-all-stationary-points API --> " + e.message)
+        return failedResponse("EXCEPTION in get-all-playlists API --> " + e.message)
     }
 }
 
@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
 const getAllStationaryPoints = async (userId) => {
     try {
         const QUERRY = {
-            "collection": "stationarypoints",
+            "collection": "stationaryplaylist",
             "database": "mocklocations",
             "dataSource": "mocklocations",
             "filter": { "user_id": userId, }
@@ -29,9 +29,9 @@ const getAllStationaryPoints = async (userId) => {
 
         let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
         if (res.data.documents.length == 0) {
-            return failedResponse("No Stationary points found for this user")
+            return failedResponse("No Playlist found")
         } else {
-            return successResponse("You have " + res.data.documents.length + " playlists stored on server.", res.data.documents);
+            return successResponse("You have " + res.data.documents.length + " stationaryt points stored on server.", res.data.documents);
         }
     } catch (e) {
         return failedResponse("EXCEPTION in getVideoTutorials " + e.message)
