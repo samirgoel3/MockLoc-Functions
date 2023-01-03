@@ -5,9 +5,10 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 
 exports.handler = async (event, context) => {
 
-    const body = event.body;
+    const body = JSON.parse(event.body);
     if (!body.user_id) { return failedResponse("Required field missing user_id") }
     else {
+        console.log("-----> USER ID: ",body.user_id);
         const data = {
             "collection": "stationarypoints",
             "database": "mocklocations",
