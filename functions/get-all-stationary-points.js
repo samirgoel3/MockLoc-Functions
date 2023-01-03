@@ -31,7 +31,7 @@ const getAllStationaryPoints = async (userId) => {
         if (res.data.documents.length == 0) {
             return failedResponse("No Stationary points found for this user")
         } else {
-            return successResponse("You have " + res.data.documents.length + " playlists stored on server.", res.data.documents);
+            return successResponse("You have " + res.data.documents.length + " stationary points stored on server.", res.data.documents);
         }
     } catch (e) {
         return failedResponse("EXCEPTION in getVideoTutorials " + e.message)
