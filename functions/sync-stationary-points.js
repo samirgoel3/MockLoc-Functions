@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
         const incoming_points = body.stationary_points;
 
         console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);
-        console.log("-----> Actuall incoming Data: " + body);
+        console.log("-----> Actuall incoming Data: " + JSON.stringify(body));
 
 
 
