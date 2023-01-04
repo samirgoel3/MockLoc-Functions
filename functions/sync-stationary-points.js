@@ -10,7 +10,6 @@ exports.handler = async (event, context) => {
         const incoming_points = body.stationary_points;
 
         console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);
-        console.log("-----> Actuall incoming Data: " + JSON.stringify(body));
 
 
 
@@ -49,6 +48,7 @@ exports.handler = async (event, context) => {
             // Collecting all existing and new point in single array 
             const overallPointsToAddInDb = getOverallPoints(stationaryPointToCreate, stationaryPointsToUpdate, allExistingPointsOfUser);
             console.log("-----> Overall ST Point need to add and update in DB: ", overallPointsToAddInDb.length);
+
 
             // Inserting overall elements in DB 
             const querryToInsertMultipleDocs = {
@@ -171,12 +171,15 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
     for (var i = 0; i < elementsToUpdate.length; i++) {
         overallStationaryPoints.push(elementsToUpdate[i])
     }
+
+
     for (var i = 0; i < allExistingPointsOfUser.length; i++) {
+       
         if (elementsToUpdate.some(el => el.latitude == allExistingPointsOfUser[i].latitude)) {
 
         } else {
             delete elementsToUpdate[i]._id
-            overallStationaryPoints.push(elementsToUpdate[i])
+            overallStationaryPoints.push(allExistingPointsOfUser[i])
         }
     }
 
