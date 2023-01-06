@@ -162,8 +162,8 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
         if (elementsToUpdate.some(el => el.playlist_id == allExistingPointsOfUser[i].playlist_id)) {
 
         } else {
-            delete elementsToUpdate[i]._id
-            overallStationaryPoints.push(elementsToUpdate[i])
+            delete allExistingPointsOfUser[i]._id
+            overallStationaryPoints.push(allExistingPointsOfUser[i])
         }
     }
 

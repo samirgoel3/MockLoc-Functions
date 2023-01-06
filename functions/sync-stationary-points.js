@@ -165,10 +165,6 @@ const getStationaryPointArrayToUpdateInDb = (elementsToUpdate, userId) => {
 const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsOfUser) => {
     console.log("-----> Final calculation using -->  elementsToCreate:" + elementsToCreate.length + " elementsToUpdate:" + elementsToUpdate.length + " allExistingPointsOfUser:" + allExistingPointsOfUser.length)
 
-    console.log("*_*_*_*_*_*_*_* ELEMENT TO UPDATE", JSON.stringify(elementsToUpdate))
-    console.log("###########################################")
-    console.log("*_*_*_*_*_*_*_* ALL EXISTING POINTS", JSON.stringify(allExistingPointsOfUser))
-
     const overallStationaryPoints = [];
     for (var i = 0; i < elementsToCreate.length; i++) {
         overallStationaryPoints.push(elementsToCreate[i])
