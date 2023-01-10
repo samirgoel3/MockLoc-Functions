@@ -28,12 +28,11 @@ const getAllItineraries = async (userId) => {
         }
 
         let res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() })
-        return successResponse("****  ", res.data)
-        // if (!res.data.documents) {
-        //     return failedResponse("No Itinerary found")
-        // } else {
-        //     return successResponse("You have " + res.data.documents.length + " playlist stored on server.", res.data.documents);
-        // }
+        if (!res.data.document) {
+            return failedResponse("No Itinerary found")
+        } else {
+            return successResponse("itineraries found successfully.", res.data.document);
+        }
     } catch (e) {
         return failedResponse("EXCEPTION in getAllItineraries " + e.message)
     }
