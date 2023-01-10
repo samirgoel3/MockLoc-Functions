@@ -6,7 +6,7 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body)
-        if(!body.stationary_points || !body.user_id){ return failedResponse("Required Field missign | stationary_points |user_id")}
+        if (!body.stationary_points || !body.user_id) { return failedResponse("Required Field missign | stationary_points |user_id") }
         const incoming_points = body.stationary_points;
 
         console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);
@@ -59,7 +59,8 @@ exports.handler = async (event, context) => {
             }
             const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
             console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
-            return successResponse("Overall documents inserted response", overallInsertionResult.data);
+            return getAllStationaryPoints(body.user_id)
+            // return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
         } else {
             if (elementsToCreate.length > 0) {
@@ -74,7 +75,8 @@ exports.handler = async (event, context) => {
                     "documents": stationaryPointToCreate
                 }
                 const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-                return successResponse("Stationary Points added successfully ", axiosResponse.data)
+                return getAllStationaryPoints(body.user_id)
+                // return successResponse("Stationary Points added successfully ", axiosResponse.data)
 
             }
         }
@@ -175,7 +177,7 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
 
 
     for (var i = 0; i < allExistingPointsOfUser.length; i++) {
-       
+
         if (elementsToUpdate.some(el => el.latitude == allExistingPointsOfUser[i].latitude)) {
 
         } else {
@@ -185,4 +187,25 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
     }
 
     return overallStationaryPoints;
+}
+
+
+const getAllStationaryPoints = async (userId) => {
+    try {
+        const QUERRY = {
+            "collection": "stationarypoints",
+            "database": "mocklocations",
+            "dataSource": "mocklocations",
+            "filter": { "user_id": userId, }
+        }
+
+        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
+        if (res.data.documents.length == 0) {
+            return failedResponse("No Stationary points found for this user")
+        } else {
+            return successResponse("You have " + res.data.documents.length + " stationary points stored on server.", res.data.documents);
+        }
+    } catch (e) {
+        return failedResponse("EXCEPTION in getVideoTutorials " + e.message)
+    }
 }
