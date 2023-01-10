@@ -9,6 +9,8 @@ exports.handler = async (event, context) => {
         if (!body.playlists || !body.user_id) { return failedResponse("Required Field missign | playlists |user_id") }
         const incoming_playlists = body.playlists;
 
+        if(incoming_playlists.length == 0 ){ return failedResponse("No playlist received")}
+
         console.log("-----> Total Incoming playlist by user ID: " + body.user_id + ": " + incoming_playlists.length);
 
 
