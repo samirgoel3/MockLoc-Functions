@@ -18,10 +18,10 @@ exports.handler = async (event, context) => {
              const data = {"collection": "itineraries","database": "mocklocations","dataSource": "mocklocations","filter": { "user_id": "" + incomingData.user_id }}
              await axios.post(DELETE_ONE, data, {headers: getHeader()});
         }
-        
-        // const QUERRY_TO_INSERT = {"collection": "itineraries","database": "mocklocations","dataSource": "mocklocations","document": incomingData}
-        // const res = await axios.post(INSERT_ONE, QUERRY_TO_INSERT, { headers: getHeader() });
-        return successResponse("Itineraries synced successfully.", "delete test");
+
+        const QUERRY_TO_INSERT = {"collection": "itineraries","database": "mocklocations","dataSource": "mocklocations","document": incomingData}
+        const res = await axios.post(INSERT_ONE, QUERRY_TO_INSERT, { headers: getHeader() });
+        return successResponse("Itineraries synced successfully.", res.data);
     } catch (e) {
         return failedResponse("Exception in sync-itineraries " + e.message);
     }
