@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
             return failedResponse("please provide user_id")
         } else {
             console.log("-----> USER ID:  ", body.user_id)
-            return getAllStationaryPoints(body.user_id)
+            return getAllPlaylist(body.user_id)
         }
     } catch (e) {
         return failedResponse("EXCEPTION in get-all-playlists API --> " + e.message)
@@ -18,7 +18,7 @@ exports.handler = async (event, context) => {
 }
 
 
-const getAllStationaryPoints = async (userId) => {
+const getAllPlaylist = async (userId) => {
     try {
         const QUERRY = {
             "collection": "stationaryplaylist",

@@ -58,7 +58,8 @@ exports.handler = async (event, context) => {
             }
             const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
             console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
-            return successResponse("Overall documents inserted response", overallInsertionResult.data);
+            return getAllPlaylist(body.user_id)
+            // return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
         }
         else {
@@ -74,7 +75,8 @@ exports.handler = async (event, context) => {
                     "documents": stationaryPlaylistToCreate
                 }
                 const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-                return successResponse("Stationary Points added successfully ", axiosResponse.data)
+                return getAllPlaylist(body.user_id)
+                // return successResponse("Stationary Points added successfully ", axiosResponse.data)
 
             }
         }
@@ -168,4 +170,25 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
     }
 
     return overallStationaryPoints;
+}
+
+
+const getAllPlaylist = async (userId) => {
+    try {
+        const QUERRY = {
+            "collection": "stationaryplaylist",
+            "database": "mocklocations",
+            "dataSource": "mocklocations",
+            "filter": { "user_id": userId, }
+        }
+
+        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
+        if (res.data.documents.length == 0) {
+            return failedResponse("No Playlist found")
+        } else {
+            return successResponse("You have " + res.data.documents.length + " playlist stored on server.", res.data.documents);
+        }
+    } catch (e) {
+        return failedResponse("EXCEPTION in getVideoTutorials " + e.message)
+    }
 }
