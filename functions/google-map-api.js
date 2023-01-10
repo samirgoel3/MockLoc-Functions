@@ -105,7 +105,7 @@ const getDirectionRouteBetweenTwoPoints = async (event) => {
             }
         }
     } catch (e) {
-        failedResponse("" + e.message)
+        return failedResponse("" + e.message)
     }
 }
 
