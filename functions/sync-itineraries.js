@@ -6,9 +6,16 @@ const { failedResponse, successResponse } = require('../api-helper/response-hand
 exports.handler = async (event, context) => {
     try {
         const incomingData = JSON.parse(event.body)
-        console.log("******  ", incomingData);
-        console.log("******  Total Itineraries", incomingData.itinerary.length);
-        console.log("******  Total Sub Itineraries", incomingData.sub_itinerary.length);
+
+        const querryToGetExistingItinerariesOfUser = { "collection": "itineraries", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + incomingData.user_id } }
+
+        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetExistingItinerariesOfUser, { headers: getHeader() });
+        console.log("******** ", axiosFindAllResponse.data);
+        return successResponse("********  ",axiosFindAllResponse.data);
+
+        // const QUERRY = { "collection": "itineraries", "database": "mocklocations", "dataSource": "mocklocations", "document": incomingData }
+
+    
         return successResponse("Sendiong test response", "test")
     } catch (e) {
         return failedResponse("Exception in sync-itineraries "+e.message);
