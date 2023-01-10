@@ -10,6 +10,7 @@ exports.handler = async (event, context) => {
         const incoming_points = body.stationary_points;
 
         console.log("-----> Total Incoming point by user ID: " + body.user_id + ": " + incoming_points.length);
+        if(incoming_points.length == 0 ){ return failedResponse("No Stationary Point Received")}
 
 
 
