@@ -40,7 +40,7 @@ const normalLogin = async (event) => {
         if (!res.data.document) { return failedResponse("User Not Found") }
         else {
             // NOTE : update player ID
-            return successResponse("User find successfully", res.data)
+            return successResponse("User find successfully", res.data.document)
         }
 
 
