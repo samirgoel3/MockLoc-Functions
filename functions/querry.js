@@ -38,7 +38,7 @@ const addQuerry = async (event)=>{
         const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
         if (!res.data.insertedId) { return failedResponse("Failed to Insert Querry in DB") }
         documentToCreate._id = res.data.insertedId;
-        return successResponse("New User details", documentToCreate)
+        return successResponse("New Query details", documentToCreate)
     }
 }
 
