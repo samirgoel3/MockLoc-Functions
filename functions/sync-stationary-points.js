@@ -117,7 +117,7 @@ const getStationaryPointArrayToAddInDb = (elementsToCreate, allExistingPointsOfU
             date: elementsToCreate[i].TimeStamp,
             launches: elementsToCreate[i].launches,
             sync_state: true,
-                accuracy:!elementsToCreate[i].accuracy ? elementsToCreate[i].accuracy :0.0
+                accuracy:elementsToCreate[i].accuracy ? elementsToCreate[i].accuracy :0.0
         })
         counter = counter + 1;
     }
@@ -151,7 +151,7 @@ const getStationaryPointArrayToUpdateInDb = (elementsToUpdate, userId) => {
                 selected_via: elementsToUpdate[i].SelectedVia,
                 date: elementsToUpdate[i].TimeStamp,
                 launches: elementsToUpdate[i].launches,
-                accuracy:!elementsToUpdate[i].accuracy ? elementsToUpdate[i].accuracy :0.0, 
+                accuracy:elementsToUpdate[i].accuracy ? elementsToUpdate[i].accuracy :0.0, 
                 sync_state: true
             }
         )
