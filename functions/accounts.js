@@ -14,6 +14,7 @@ exports.handler = async (event, context) => {
             if (TYPE == "NORMAL_LOGIN") { return normalLogin(event) }
             if (TYPE == "NORMAL_SIGNUP") { return normalSignUp(event) }
             if (TYPE == "GOOGLE") { return googleLoginSignUp(event) }
+            if (TYPE == "GOOGLE_REVAMP") { return googleLoginSignUpRevamp(event) }
             else { return failedResponse("Please Mention type for Api Call") }
         }
     } catch (e) {
@@ -151,6 +152,60 @@ const googleLoginSignUp = async (event) => {
         // user already exist
         else {
             const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_social_id": google_social_id } }
+            const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
+            const dataToSend = res.data.document ; 
+            dataToSend.token = "will remove later";
+            return successResponse("User already exist.", dataToSend)
+        }
+
+    } catch (e) {
+        return failedResponse("EXCEPTION in googleLoginSignUp --> " + e.message)
+    }
+}
+
+const googleLoginSignUpRevamp = async (event) => {
+    try {
+        const body = JSON.parse(event.body)
+
+        const google_mail = body.google_mail
+        const player_id = body.player_id || "NA"
+
+        if (!google_social_id) { return failedResponse("Please send required paramaters") }
+
+        // check user already exist
+        const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_mail": google_mail, } }
+        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
+
+        // user does not exist
+        if (res.data.document == null) {
+            const documentToCreate = {
+                login_type: "GOOGLE",
+                user_name: "",
+                user_email: "",
+                user_phone: "" + body.user_phone,
+                developer: body.developer === 1 ? true : false,
+                password: "",
+                google_name: "" + body.google_name,
+                google_mail: "" + body.google_mail,
+                google_social_id: "" + google_social_id,
+                google_photo: "" + body.google_photo,
+                facebook_name: "",
+                facebook_mail: "",
+                facebook_social_id: "",
+                facebook_photo: "",
+                player_id: player_id
+            }
+            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "document": documentToCreate }
+            const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
+            if (!res.data.insertedId) { return failedResponse("Failed to Insert user in DB") }
+            documentToCreate.token = "will remove later";
+            documentToCreate._id = res.data.insertedId;
+
+            return successResponse("New User details", documentToCreate)
+        }
+        // user already exist
+        else {
+            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_mail": google_mail } }
             const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
             const dataToSend = res.data.document ; 
             dataToSend.token = "will remove later";
