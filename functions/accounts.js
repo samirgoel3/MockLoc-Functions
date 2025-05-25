@@ -166,7 +166,8 @@ const googleLoginSignUp = async (event) => {
 const googleLoginSignUpRevamp = async (event) => {
     try {
         const body = JSON.parse(event.body)
-
+        
+        const google_social_id = body.social_id
         const google_mail = body.google_mail
         const player_id = body.player_id || "NA"
 
