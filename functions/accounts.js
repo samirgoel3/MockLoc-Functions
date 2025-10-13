@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
 const normalLogin = async (event) => {
     try {
         const body = JSON.parse(event.body)
-
+return successResponse("User find successfully", {"result":" trying normal login"})
         if (!body.user_email || !body.password) { return failedResponse("Please enter email and password") }
 
         if (!client) {
