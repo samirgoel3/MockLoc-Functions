@@ -31,12 +31,24 @@ exports.handler = async (event, context) => {
             return failedResponse("No documents found")
         }
 
-        // Use found users' IDs to fetch stationary points
+        // Use found users' IDs to fetch related data
         const userIds = documents.map(u => '' + u._id);
         const stationaryCollection = db.collection('stationarypoints');
-        const stationaryDocs = await stationaryCollection.find({ user_id: { $in: userIds } }).toArray();
+        const playlistCollection = db.collection('stationaryplaylist');
+        const itinerariesCollection = db.collection('itineraries');
 
-        return successResponse("Data found", { users: documents, stationarypoints: stationaryDocs || [] })
+        const [stationaryDocs, playlistDocs, itineraryDocs] = await Promise.all([
+            stationaryCollection.find({ user_id: { $in: userIds } }).toArray(),
+            playlistCollection.find({ user_id: { $in: userIds } }).toArray(),
+            itinerariesCollection.find({ user_id: { $in: userIds } }).toArray()
+        ]);
+
+        return successResponse("Data found", {
+            users: documents,
+            stationarypoints: stationaryDocs || [],
+            playlists: playlistDocs || [],
+            itineraries: itineraryDocs || []
+        })
     } catch (e) {
         return failedResponse("EXCEPTION in allDocsByEmail --> " + e.message)
     }
