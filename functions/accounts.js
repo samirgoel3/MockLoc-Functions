@@ -10,16 +10,19 @@ let client;
 exports.handler = async (event, context) => {
 
     try {
-        if (!event.body) {
-            return failedResponse("This is post type api, please send required params correctly")
-        } else {
-            const TYPE = JSON.parse(event.body).type;
-            if (TYPE == "NORMAL_LOGIN") { return normalLogin(event) }
-            if (TYPE == "NORMAL_SIGNUP") { return normalSignUp(event) }
-            if (TYPE == "GOOGLE") { return googleLoginSignUp(event) }
-            if (TYPE == "GOOGLE_REVAMP") { return googleLoginSignUpRevamp(event) }
-            else { return failedResponse("Please Mention type for Api Call") }
-        }
+        return failedResponse("just testing the api")
+
+
+        // if (!event.body) {
+        //     return failedResponse("This is post type api, please send required params correctly")
+        // } else {
+        //     const TYPE = JSON.parse(event.body).type;
+        //     if (TYPE == "NORMAL_LOGIN") { return normalLogin(event) }
+        //     if (TYPE == "NORMAL_SIGNUP") { return normalSignUp(event) }
+        //     if (TYPE == "GOOGLE") { return googleLoginSignUp(event) }
+        //     if (TYPE == "GOOGLE_REVAMP") { return googleLoginSignUpRevamp(event) }
+        //     else { return failedResponse("Please Mention type for Api Call") }
+        // }
     } catch (e) {
         return failedResponse(e.message)
     }
@@ -37,7 +40,7 @@ const normalLogin = async (event) => {
         }
         const db = client.db("mocklocations");
         const collection = db.collection("users");
-        const query = { user_email: body.user_email,password: body.password};
+        const query = { user_email: body.user_email, password: body.password };
         const res = await collection.findOne(query);
         if (!res.data.document) { return failedResponse("User Not Found") }
         else {
