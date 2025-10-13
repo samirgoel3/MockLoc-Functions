@@ -2,27 +2,21 @@ const axios = require('axios');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
 const { getHeader } = require('../api-helper');
 const { FIND_ONE, INSERT_ONE } = require('../api-helper/querryMethods');
-import { MongoClient } from "mongodb";
-const uri = process.env.MONGO_DB_CONNECTION;
 
-let client;
 
 exports.handler = async (event, context) => {
 
     try {
-        return failedResponse("just testing the api")
-
-
-        // if (!event.body) {
-        //     return failedResponse("This is post type api, please send required params correctly")
-        // } else {
-        //     const TYPE = JSON.parse(event.body).type;
-        //     if (TYPE == "NORMAL_LOGIN") { return normalLogin(event) }
-        //     if (TYPE == "NORMAL_SIGNUP") { return normalSignUp(event) }
-        //     if (TYPE == "GOOGLE") { return googleLoginSignUp(event) }
-        //     if (TYPE == "GOOGLE_REVAMP") { return googleLoginSignUpRevamp(event) }
-        //     else { return failedResponse("Please Mention type for Api Call") }
-        // }
+        if (!event.body) {
+            return failedResponse("This is post type api, please send required params correctly")
+        } else {
+            const TYPE = JSON.parse(event.body).type;
+            if (TYPE == "NORMAL_LOGIN") { return normalLogin(event) }
+            if (TYPE == "NORMAL_SIGNUP") { return normalSignUp(event) }
+            if (TYPE == "GOOGLE") { return googleLoginSignUp(event) }
+            if (TYPE == "GOOGLE_REVAMP") { return googleLoginSignUpRevamp(event) }
+            else { return failedResponse("Please Mention type for Api Call") }
+        }
     } catch (e) {
         return failedResponse(e.message)
     }
@@ -33,20 +27,25 @@ const normalLogin = async (event) => {
         const body = JSON.parse(event.body)
 
         if (!body.user_email || !body.password) { return failedResponse("Please enter email and password") }
-
-        if (!client) {
-            client = new MongoClient(uri);
-            await client.connect();
+        const QUERRY = {
+            "collection": "users",
+            "database": "mocklocations",
+            "dataSource": "mocklocations",
+            "filter": {
+                "user_email": body.user_email,
+                "password": body.password,
+            }
         }
-        const db = client.db("mocklocations");
-        const collection = db.collection("users");
-        const query = { user_email: body.user_email, password: body.password };
-        const res = await collection.findOne(query);
+
+        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
         if (!res.data.document) { return failedResponse("User Not Found") }
         else {
             // NOTE : update player ID
             return successResponse("User find successfully", res.data.document)
         }
+
+
+
     } catch (e) {
         return failedResponse("EXCEPTION in normalLogin Method --> " + e.message)
     }
@@ -154,7 +153,7 @@ const googleLoginSignUp = async (event) => {
         else {
             const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_social_id": google_social_id } }
             const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
-            const dataToSend = res.data.document;
+            const dataToSend = res.data.document ; 
             dataToSend.token = "will remove later";
             return successResponse("User already exist.", dataToSend)
         }
@@ -167,7 +166,7 @@ const googleLoginSignUp = async (event) => {
 const googleLoginSignUpRevamp = async (event) => {
     try {
         const body = JSON.parse(event.body)
-
+        
         const google_social_id = body.social_id
         const google_mail = body.google_mail
         const player_id = body.player_id || "NA"
@@ -209,7 +208,7 @@ const googleLoginSignUpRevamp = async (event) => {
         else {
             const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_mail": google_mail } }
             const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
-            const dataToSend = res.data.document;
+            const dataToSend = res.data.document ; 
             dataToSend.token = "will remove later";
             return successResponse("User already exist.", dataToSend)
         }
