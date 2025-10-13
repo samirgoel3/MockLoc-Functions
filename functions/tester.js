@@ -5,7 +5,7 @@ let cachedClient = null;
 export async function handler(event, context) {
   try {
     if (!cachedClient) {
-      cachedClient = new MongoClient("mongodb+srv://samir:11223344@mocklocations.zymnm.mongodb.net/");
+      cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
       await cachedClient.connect();
     }
 
