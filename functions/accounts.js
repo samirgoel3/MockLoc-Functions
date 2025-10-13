@@ -39,7 +39,7 @@ const normalLogin = async (event) => {
         const collection = db.collection("users");
         const query = { user_email: body.user_email,password: body.password};
         const res = await collection.findOne(query);
-
+        console.log("RES IS ",res)
         if (!res.data.document) { return failedResponse("User Not Found") }
         else {
             // NOTE : update player ID
