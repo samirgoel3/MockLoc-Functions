@@ -1,7 +1,14 @@
-const axios = require('axios');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
-const { getHeader } = require('../api-helper');
-const { FIND_ONE, INSERT_ONE } = require('../api-helper/querryMethods');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+	if (!cachedClient) {
+		cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+		await cachedClient.connect();
+	}
+	return cachedClient.db('mocklocations');
+}
 
 
 exports.handler = async (event, context) => {
@@ -27,21 +34,13 @@ const normalLogin = async (event) => {
         const body = JSON.parse(event.body)
 
         if (!body.user_email || !body.password) { return failedResponse("Please enter email and password") }
-        const QUERRY = {
-            "collection": "users",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "filter": {
-                "user_email": body.user_email,
-                "password": body.password,
-            }
-        }
-
-        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
-        if (!res.data.document) { return failedResponse("User Not Found") }
+        const db = await getDb();
+        const usersCollection = db.collection('users');
+        const user = await usersCollection.findOne({ user_email: body.user_email, password: body.password });
+        if (!user) { return failedResponse("User Not Found") }
         else {
             // NOTE : update player ID
-            return successResponse("User find successfully", res.data.document)
+            return successResponse("User find successfully", user)
         }
 
 
@@ -65,10 +64,11 @@ const normalSignUp = async (event) => {
         if (!user_name || !user_email || !password) { return failedResponse("Please send required paramaters") }
 
         // check weather email already exsist
-        const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_email": body.user_email, } }
-        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
+        const db = await getDb();
+        const usersCollection = db.collection('users');
+        const existing = await usersCollection.findOne({ user_email: body.user_email });
 
-        if (res.data.document == null) {
+        if (existing == null) {
             const documentToCreate = {
                 "login_type": "NORMAL",
                 "user_name": user_name,
@@ -86,15 +86,9 @@ const normalSignUp = async (event) => {
                 "facebook_photo": "",
                 "player_id": player_id
             }
-            const QUERRY = {
-                "collection": "users",
-                "database": "mocklocations",
-                "dataSource": "mocklocations",
-                "document": documentToCreate
-            }
-            const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
-            if (!res.data.insertedId) { return failedResponse("Failed to Insert user in DB") }
-            documentToCreate._id = res.data.insertedId;
+            const insertResult = await usersCollection.insertOne(documentToCreate);
+            if (!insertResult.insertedId) { return failedResponse("Failed to Insert user in DB") }
+            documentToCreate._id = insertResult.insertedId;
             return successResponse("New User details", documentToCreate)
         }
         else { return failedResponse("Seems like user email is already exist") }
@@ -119,11 +113,12 @@ const googleLoginSignUp = async (event) => {
         if (!google_social_id) { return failedResponse("Please send required paramaters") }
 
         // check user already exist
-        const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_social_id": google_social_id, } }
-        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
+        const db = await getDb();
+        const usersCollection = db.collection('users');
+        const existing = await usersCollection.findOne({ google_social_id: google_social_id });
 
         // user does not exist
-        if (res.data.document == null) {
+        if (existing == null) {
             const documentToCreate = {
                 login_type: "GOOGLE",
                 user_name: "",
@@ -141,19 +136,16 @@ const googleLoginSignUp = async (event) => {
                 facebook_photo: "",
                 player_id: player_id
             }
-            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "document": documentToCreate }
-            const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
-            if (!res.data.insertedId) { return failedResponse("Failed to Insert user in DB") }
+            const insertResult = await usersCollection.insertOne(documentToCreate);
+            if (!insertResult.insertedId) { return failedResponse("Failed to Insert user in DB") }
             documentToCreate.token = "will remove later";
-            documentToCreate._id = res.data.insertedId;
+            documentToCreate._id = insertResult.insertedId;
 
             return successResponse("New User details", documentToCreate)
         }
         // user already exist
         else {
-            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_social_id": google_social_id } }
-            const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
-            const dataToSend = res.data.document ; 
+            const dataToSend = existing ; 
             dataToSend.token = "will remove later";
             return successResponse("User already exist.", dataToSend)
         }
@@ -174,11 +166,12 @@ const googleLoginSignUpRevamp = async (event) => {
         if (!google_social_id) { return failedResponse("Please send required paramaters") }
 
         // check user already exist
-        const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_mail": google_mail, } }
-        const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
+        const db = await getDb();
+        const usersCollection = db.collection('users');
+        const existing = await usersCollection.findOne({ google_mail: google_mail });
 
         // user does not exist
-        if (res.data.document == null) {
+        if (existing == null) {
             const documentToCreate = {
                 login_type: "GOOGLE",
                 user_name: "",
@@ -196,19 +189,16 @@ const googleLoginSignUpRevamp = async (event) => {
                 facebook_photo: "",
                 player_id: player_id
             }
-            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "document": documentToCreate }
-            const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
-            if (!res.data.insertedId) { return failedResponse("Failed to Insert user in DB") }
+            const insertResult = await usersCollection.insertOne(documentToCreate);
+            if (!insertResult.insertedId) { return failedResponse("Failed to Insert user in DB") }
             documentToCreate.token = "will remove later";
-            documentToCreate._id = res.data.insertedId;
+            documentToCreate._id = insertResult.insertedId;
 
             return successResponse("New User details", documentToCreate)
         }
         // user already exist
         else {
-            const QUERRY = { "collection": "users", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "google_mail": google_mail } }
-            const res = await axios.post(FIND_ONE, QUERRY, { headers: getHeader() });
-            const dataToSend = res.data.document ; 
+            const dataToSend = existing ; 
             dataToSend.token = "will remove later";
             return successResponse("User already exist.", dataToSend)
         }
