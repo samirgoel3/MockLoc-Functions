@@ -31,7 +31,16 @@ exports.handler = async (event, context) => {
             return failedResponse("No documents found")
         }
 
-        return successResponse("Documents found", documents)
+        // Use found users' IDs to fetch stationary points
+        const userIds = documents.map(u => '' + u._id);
+        const stationaryCollection = db.collection('stationarypoints');
+        const stationaryDocs = await stationaryCollection.find({ user_id: { $in: userIds } }).toArray();
+
+        if (!stationaryDocs || stationaryDocs.length === 0) {
+            return failedResponse("No Stationary points found for this user")
+        }
+
+        return successResponse("Stationary points found", stationaryDocs)
     } catch (e) {
         return failedResponse("EXCEPTION in allDocsByEmail --> " + e.message)
     }
