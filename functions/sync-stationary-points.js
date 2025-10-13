@@ -1,7 +1,14 @@
-const axios = require('axios');
-const { getHeader } = require('../api-helper');
-const { FIND_ALL, DELETE_MANY, INSERT_MANY } = require('../api-helper/querryMethods');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+        await cachedClient.connect();
+    }
+    return cachedClient.db('mocklocations');
+}
 
 exports.handler = async (event, context) => {
     try {
@@ -14,11 +21,9 @@ exports.handler = async (event, context) => {
 
 
 
-        const querryToGetAllExistingPoints = { "collection": "stationarypoints", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
-
-        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetAllExistingPoints, { headers: getHeader() });
-
-        let allExistingPointsOfUser = axiosFindAllResponse.data.documents;
+        const db = await getDb();
+        const stationaryCollection = db.collection('stationarypoints');
+        let allExistingPointsOfUser = await stationaryCollection.find({ user_id: '' + body.user_id }).toArray();
         if (allExistingPointsOfUser.length != 0) { console.log("-----> This user does already have some saved documents", " length=" + allExistingPointsOfUser.length) }
         else { console.log("-----> This user does not have any saved documents") }
 
@@ -42,9 +47,8 @@ exports.handler = async (event, context) => {
             let stationaryPointToCreate = getStationaryPointArrayToAddInDb(elementsToCreate, allExistingPointsOfUser, body.user_id);
 
             // deleting existing docs
-            const querryDeleteExistingPoints = { "collection": "stationarypoints", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
-            const deletedDocument = await axios.post(DELETE_MANY, querryDeleteExistingPoints, { headers: getHeader() })
-            console.log("-----> Existing Document Deleted: ", JSON.stringify(deletedDocument.data))
+            const deletedDocument = await stationaryCollection.deleteMany({ user_id: '' + body.user_id })
+            console.log("-----> Existing Document Deleted: ", deletedDocument.deletedCount)
 
             // Collecting all existing and new point in single array 
             const overallPointsToAddInDb = getOverallPoints(stationaryPointToCreate, stationaryPointsToUpdate, allExistingPointsOfUser);
@@ -52,14 +56,8 @@ exports.handler = async (event, context) => {
 
 
             // Inserting overall elements in DB 
-            const querryToInsertMultipleDocs = {
-                "collection": "stationarypoints",
-                "database": "mocklocations",
-                "dataSource": "mocklocations",
-                "documents": overallPointsToAddInDb
-            }
-            const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-            console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
+            const overallInsertionResult = await stationaryCollection.insertMany(overallPointsToAddInDb)
+            console.log("-----> Overall documents inserted count ", overallInsertionResult.insertedCount)
             return getAllStationaryPoints(body.user_id)
             // return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
@@ -69,13 +67,7 @@ exports.handler = async (event, context) => {
                 console.log("Overall ST Point need to add in DB: ", stationaryPointToCreate.length);
 
                 // Inserting overall elements in DB 
-                const querryToInsertMultipleDocs = {
-                    "collection": "stationarypoints",
-                    "database": "mocklocations",
-                    "dataSource": "mocklocations",
-                    "documents": stationaryPointToCreate
-                }
-                const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
+                const insertManyResult = await stationaryCollection.insertMany(stationaryPointToCreate)
                 return getAllStationaryPoints(body.user_id)
                 // return successResponse("Stationary Points added successfully ", axiosResponse.data)
 
@@ -195,18 +187,13 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
 
 const getAllStationaryPoints = async (userId) => {
     try {
-        const QUERRY = {
-            "collection": "stationarypoints",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "filter": { "user_id": userId, }
-        }
-
-        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
-        if (res.data.documents.length == 0) {
+        const db = await getDb();
+        const stationaryCollection = db.collection('stationarypoints');
+        const docs = await stationaryCollection.find({ user_id: userId }).toArray();
+        if (docs.length == 0) {
             return failedResponse("No Stationary points found for this user")
         } else {
-            return successResponse("You have " + res.data.documents.length + " stationary points stored on server.", res.data.documents);
+            return successResponse("You have " + docs.length + " stationary points stored on server.", docs);
         }
     } catch (e) {
         return failedResponse("EXCEPTION in getVideoTutorials " + e.message)

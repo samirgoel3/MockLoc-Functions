@@ -1,7 +1,14 @@
-const axios = require('axios');
-const { getHeader } = require('../api-helper');
-const { FIND_ALL, DELETE_MANY, INSERT_MANY } = require('../api-helper/querryMethods');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+        await cachedClient.connect();
+    }
+    return cachedClient.db('mocklocations');
+}
 
 exports.handler = async (event, context) => {
     try {
@@ -15,11 +22,10 @@ exports.handler = async (event, context) => {
 
 
 
-        const querryToGetAllExistingPlaylists = { "collection": "stationaryplaylist", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
 
-        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetAllExistingPlaylists, { headers: getHeader() });
-
-        let allExistingPlaylistsOfUser = axiosFindAllResponse.data.documents;
+		const db = await getDb();
+		const playlistCollection = db.collection('stationaryplaylist');
+		let allExistingPlaylistsOfUser = await playlistCollection.find({ user_id: '' + body.user_id }).toArray();
         if (allExistingPlaylistsOfUser.length != 0) { console.log("-----> This user does already have some saved playlist", "length=" + allExistingPlaylistsOfUser.length) }
         else { console.log("-----> This user does not have any saved playlist") }
 
@@ -38,28 +44,21 @@ exports.handler = async (event, context) => {
         console.log("-----> Elements to Insert", elementsToCreate.length)
 
 
-        if (elementsToUpdate.length > 0) {
+		if (elementsToUpdate.length > 0) {
             let playlistsToUpdate = getPlaylistsArrayToUpdateInDb(elementsToUpdate, body.user_id);
             let playlistsToCreate = getPlaylistsArrayToAddInDb(elementsToCreate, body.user_id);
 
-            // deleting existing docs
-            const querryDeleteExistingPoints = { "collection": "stationaryplaylist", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + body.user_id } }
-            const deletedDocument = await axios.post(DELETE_MANY, querryDeleteExistingPoints, { headers: getHeader() })
-            console.log("-----> Existing Document Deleted: ", JSON.stringify(deletedDocument.data))
+			// deleting existing docs
+			const deleteResult = await playlistCollection.deleteMany({ user_id: '' + body.user_id });
+			console.log("-----> Existing Document Deleted: deletedCount=", deleteResult.deletedCount)
 
             // Collecting all existing and new point in single array 
             const overallPlaylistsToAddInDb = getOverallPoints(playlistsToCreate, playlistsToUpdate, allExistingPlaylistsOfUser);
             console.log("-----> Overall Playlists need to add or update in DB: ", overallPlaylistsToAddInDb.length);
 
-            // Inserting overall elements in DB 
-            const querryToInsertMultipleDocs = {
-                "collection": "stationaryplaylist",
-                "database": "mocklocations",
-                "dataSource": "mocklocations",
-                "documents": overallPlaylistsToAddInDb
-            }
-            const overallInsertionResult = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
-            console.log("-----> Overall documents inserted response ", JSON.stringify(overallInsertionResult.data))
+			// Inserting overall elements in DB 
+			const overallInsertionResult = await playlistCollection.insertMany(overallPlaylistsToAddInDb);
+			console.log("-----> Overall documents inserted: insertedCount=", overallInsertionResult.insertedCount)
             return getAllPlaylist(body.user_id)
             // return successResponse("Overall documents inserted response", overallInsertionResult.data);
 
@@ -69,14 +68,8 @@ exports.handler = async (event, context) => {
                 let stationaryPlaylistToCreate = getPlaylistsArrayToAddInDb(elementsToCreate, body.user_id);
                 console.log("Overall Playlist need to add in DB: ", stationaryPlaylistToCreate.length);
 
-                // Inserting overall elements in DB 
-                const querryToInsertMultipleDocs = {
-                    "collection": "stationaryplaylist",
-                    "database": "mocklocations",
-                    "dataSource": "mocklocations",
-                    "documents": stationaryPlaylistToCreate
-                }
-                const axiosResponse = await axios.post(INSERT_MANY, querryToInsertMultipleDocs, { headers: getHeader() })
+				// Inserting overall elements in DB 
+				const insertManyResult = await playlistCollection.insertMany(stationaryPlaylistToCreate)
                 return getAllPlaylist(body.user_id)
                 // return successResponse("Stationary Points added successfully ", axiosResponse.data)
 
@@ -177,18 +170,13 @@ const getOverallPoints = (elementsToCreate, elementsToUpdate, allExistingPointsO
 
 const getAllPlaylist = async (userId) => {
     try {
-        const QUERRY = {
-            "collection": "stationaryplaylist",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "filter": { "user_id": userId, }
-        }
-
-        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
-        if (res.data.documents.length == 0) {
+        const db = await getDb();
+        const playlistCollection = db.collection('stationaryplaylist');
+        const docs = await playlistCollection.find({ user_id: userId }).toArray();
+        if (docs.length == 0) {
             return failedResponse("No Playlist found")
         } else {
-            return successResponse("You have " + res.data.documents.length + " playlist stored on server.", res.data.documents);
+            return successResponse("You have " + docs.length + " playlist stored on server.", docs);
         }
     } catch (e) {
         return failedResponse("EXCEPTION in getVideoTutorials " + e.message)

@@ -1,7 +1,14 @@
-const axios = require('axios');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
-const { getHeader } = require('../api-helper');
-const { FIND_ALL, INSERT_ONE } = require('../api-helper/querryMethods');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+        await cachedClient.connect();
+    }
+    return cachedClient.db('mocklocations');
+}
 
 
 exports.handler = async (event, context) => {
@@ -29,15 +36,11 @@ const addQuerry = async (event)=>{
         return failedResponse("Please add required paramas user_id  email phone querry" )
     }else{
         const documentToCreate = {"user_id":user_id, "user_email":user_email, "user_phone":user_phone, "user_query":user_query, "status":"PENDING" }
-        const QUERRY = {
-            "collection": "queries",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "document": documentToCreate
-        }
-        const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
-        if (!res.data.insertedId) { return failedResponse("Failed to Insert Querry in DB") }
-        documentToCreate._id = res.data.insertedId;
+        const db = await getDb();
+        const queries = db.collection('queries');
+        const insertResult = await queries.insertOne(documentToCreate);
+        if (!insertResult.insertedId) { return failedResponse("Failed to Insert Querry in DB") }
+        documentToCreate._id = insertResult.insertedId;
         return successResponse("New Query details", documentToCreate)
     }
 }
@@ -48,13 +51,13 @@ const getAllQueries = async(event)=>{
     if(!user_id){
         return failedResponse("Please add required paramas "+user_id )
     }else{
-
-        const QUERRY = {"collection": "queries","database": "mocklocations","dataSource": "mocklocations","filter": { "user_id": user_id, }};
-        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
-        if (res.data.documents.length == 0) {
+        const db = await getDb();
+        const queries = db.collection('queries');
+        const docs = await queries.find({ user_id: user_id }).toArray();
+        if (docs.length == 0) {
             return failedResponse("No Querries found")
         } else {
-            return successResponse("You have " + res.data.documents.length + "  stored on server.", res.data.documents);
+            return successResponse("You have " + docs.length + "  stored on server.", docs);
         }
 
     }

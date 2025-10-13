@@ -1,7 +1,14 @@
-const axios = require('axios');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
-const { getHeader } = require('../api-helper');
-const { FIND_ALL, INSERT_ONE } = require('../api-helper/querryMethods');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+        await cachedClient.connect();
+    }
+    return cachedClient.db('mocklocations');
+}
 
 
 exports.handler = async (event, context) => {
@@ -27,28 +34,25 @@ const addFAQ = async (event)=>{
     if( !question || !answer){
         return failedResponse("Please add required paramas question answer" )
     }else{
+        const db = await getDb();
+        const faqCollection = db.collection('faq');
         const documentToCreate = {"question":question, "answer":answer }
-        const QUERRY = {
-            "collection": "faq",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "document": documentToCreate
-        }
-        const res = await axios.post(INSERT_ONE, QUERRY, { headers: getHeader() });
-        if (!res.data.insertedId) { return failedResponse("Failed to Insert Querry in DB") }
-        documentToCreate._id = res.data.insertedId;
+        const insertResult = await faqCollection.insertOne(documentToCreate);
+        if (!insertResult.insertedId) { return failedResponse("Failed to Insert Querry in DB") }
+        documentToCreate._id = insertResult.insertedId;
         return successResponse("New FAQ details", documentToCreate)
     }
 }
 
 
 const getAllFAQ = async(event)=>{
-    const QUERRY = {"collection": "faq","database": "mocklocations","dataSource": "mocklocations","filter": { }};
-        let res = await axios.post(FIND_ALL, QUERRY, { headers: getHeader() })
-        if (res.data.documents.length == 0) {
-            return failedResponse("No FAQ found")
-        } else {
-            return successResponse("You have " + res.data.documents.length + " FAQ stored on server.", res.data.documents);
-        }
+    const db = await getDb();
+    const faqCollection = db.collection('faq');
+    const docs = await faqCollection.find({}).toArray();
+    if (!docs || docs.length === 0) {
+        return failedResponse("No FAQ found")
+    } else {
+        return successResponse("You have " + docs.length + " FAQ stored on server.", docs);
+    }
 
 }

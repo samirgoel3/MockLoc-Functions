@@ -1,27 +1,30 @@
-const axios = require('axios');
-const { getHeader } = require('../api-helper');
-const { FIND_ALL, INSERT_ONE, DELETE_ONE } = require('../api-helper/querryMethods');
-
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+	if (!cachedClient) {
+		cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+		await cachedClient.connect();
+	}
+	return cachedClient.db('mocklocations');
+}
 
 
 exports.handler = async (event, context) => {
     try {
         const incomingData = JSON.parse(event.body)
 
-        const querryToGetExistingItinerariesOfUser = { "collection": "itineraries", "database": "mocklocations", "dataSource": "mocklocations", "filter": { "user_id": "" + incomingData.user_id } }
+		const db = await getDb();
+		const itineraries = db.collection('itineraries');
+		const userIdStr = '' + incomingData.user_id;
 
-        let axiosFindAllResponse = await axios.post(FIND_ALL, querryToGetExistingItinerariesOfUser, { headers: getHeader() });
+		// delete existing itineraries for this user (if any)
+		await itineraries.deleteMany({ user_id: userIdStr });
 
-        if (axiosFindAllResponse.data.documents.length != 0) {
-             // delete exisitng itineraries of this user
-             const data = {"collection": "itineraries","database": "mocklocations","dataSource": "mocklocations","filter": { "user_id": "" + incomingData.user_id }}
-             await axios.post(DELETE_ONE, data, {headers: getHeader()});
-        }
-
-        const QUERRY_TO_INSERT = {"collection": "itineraries","database": "mocklocations","dataSource": "mocklocations","document": incomingData}
-        const res = await axios.post(INSERT_ONE, QUERRY_TO_INSERT, { headers: getHeader() });
-        return successResponse("Itineraries synced successfully.", res.data);
+		// insert new itinerary document
+		const insertResult = await itineraries.insertOne(incomingData);
+		return successResponse("Itineraries synced successfully.", { insertedId: insertResult.insertedId });
     } catch (e) {
         return failedResponse("Exception in sync-itineraries " + e.message);
     }

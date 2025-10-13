@@ -1,7 +1,14 @@
-const axios = require('axios');
-const { getHeader } = require('../api-helper');
-const { DELETE_MANY } = require('../api-helper/querryMethods');
 const { failedResponse, successResponse } = require('../api-helper/response-handler');
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+const getDb = async () => {
+    if (!cachedClient) {
+        cachedClient = new MongoClient(process.env.MONGO_DB_CONNECTION);
+        await cachedClient.connect();
+    }
+    return cachedClient.db('mocklocations');
+}
 
 exports.handler = async (event, context) => {
 
@@ -9,15 +16,10 @@ exports.handler = async (event, context) => {
     if (!body.user_id) { return failedResponse("Required field missing user_id") }
     else {
         console.log("-----> USER ID: ",body.user_id);
-        const data = {
-            "collection": "stationarypoints",
-            "database": "mocklocations",
-            "dataSource": "mocklocations",
-            "filter": { "user_id": "" + body.user_id }
-        }
-
-        const res = await axios.post(DELETE_MANY, data, {headers: getHeader()});
-        return successResponse("Deleted Response", res.data)
+        const db = await getDb();
+        const stationaryCollection = db.collection('stationarypoints');
+        const deleteResult = await stationaryCollection.deleteMany({ user_id: '' + body.user_id });
+        return successResponse("Deleted Response", { deletedCount: deleteResult.deletedCount })
     }
 
 }
