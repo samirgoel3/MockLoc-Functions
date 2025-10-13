@@ -10,7 +10,7 @@ export async function handler(event, context) {
     }
 
     const db = cachedClient.db("mocklocations");
-    const users = await db.collection("articles").find().toArray();
+    const users = await db.collection("users").find().toArray();
 
     return {
       statusCode: 200,
