@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
 const normalLogin = async (event) => {
     try {
         const body = JSON.parse(event.body)
-return successResponse("User find successfully", {"result":" trying normal login"})
+
         if (!body.user_email || !body.password) { return failedResponse("Please enter email and password") }
 
         if (!client) {
@@ -39,7 +39,6 @@ return successResponse("User find successfully", {"result":" trying normal login
         const collection = db.collection("users");
         const query = { user_email: body.user_email,password: body.password};
         const res = await collection.findOne(query);
-        console.log("RES IS ",res)
         if (!res.data.document) { return failedResponse("User Not Found") }
         else {
             // NOTE : update player ID
