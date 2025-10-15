@@ -13,6 +13,7 @@ const getDb = async () => {
 exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body)
+        console.log("-----> BODY: ", body)
         if (!body.playlists || !body.user_id) { return failedResponse("Required Field missign | playlists |user_id") }
         const incoming_playlists = body.playlists;
 
