@@ -50,7 +50,7 @@ exports.handler = async (event, context) => {
         ]);
 
         return successResponse("Data found", {
-            users: [userDoc],
+            user: userDoc,
             stationarypoints: stationaryDocs || [],
             playlists: playlistDocs || [],
             itineraries: itineraryDocs || []
