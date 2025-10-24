@@ -48,11 +48,11 @@ exports.handler = async (event, context) => {
          * Using itineraryCreatedDate as the unique identifier
          */
         var elementsToUpdate = [], elementsToCreate = [];
-        for (var i = 0; i < incomingItineraries.itinerary.length; i++) {
-            if (allExistingItinerariesOfUser.itinerary.some(el => el.itineraryCreatedDate === incomingItineraries.itinerary[i].itineraryCreatedDate)) {
-                elementsToUpdate.push(incomingItineraries.itinerary[i]);
+        for (var i = 0; i < incomingItineraries.length; i++) {
+            if (allExistingItinerariesOfUser.itinerary.some(el => el.itineraryCreatedDate === incomingItineraries[i].itineraryCreatedDate)) {
+                elementsToUpdate.push(incomingItineraries[i]);
             } else {
-                elementsToCreate.push(incomingItineraries.itinerary[i]);
+                elementsToCreate.push(incomingItineraries[i]);
             }
         }
         console.log("-----> Elements to update", elementsToUpdate.length);
