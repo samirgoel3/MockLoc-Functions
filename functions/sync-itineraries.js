@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
         // Get all existing itineraries for this user
         let allExistingItinerariesOfUser = await itineraries.find({ user_id: userIdStr }).toArray();
         if (allExistingItinerariesOfUser.length != 0) {
-            console.log("-----> This user already has some saved itineraries", allExistingItinerariesOfUser);
+            console.log("-----> This user already has some saved itineraries", allExistingItinerariesOfUser.itinerary.length);
         } else {
             console.log("-----> This user does not have any saved itineraries");
         }
