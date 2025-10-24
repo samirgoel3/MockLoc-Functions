@@ -13,6 +13,8 @@ const getDb = async () => {
 
 exports.handler = async (event, context) => {
     try {
+		console.log("-----> Tsting this api is running or not");
+
         const body = JSON.parse(event.body);
         
         if (!body.itineraries || !body.user_id) {
