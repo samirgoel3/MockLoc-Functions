@@ -17,14 +17,14 @@ exports.handler = async (event, context) => {
 
         const body = JSON.parse(event.body);
         
-        if (!body.itineraries || !body.user_id) {
-			console.log("-----> Required fields missing: itineraries or user_id");
-            return failedResponse("Required fields missing: itineraries or user_id");
+        if (!body.itinerary || !body.user_id) {
+			console.log("-----> Required fields missing: itinerary or user_id");
+            return failedResponse("Required fields missing: itinerary or user_id");
         }else{
 			console.log("-----> Found User ID", body.user_id);
 		}
         
-        const incomingItineraries = body.itineraries;
+        const incomingItineraries = body.itinerary;
         
         console.log("-----> Total incoming itineraries for user ID: " + body.user_id + ": " + incomingItineraries.length);
         if (incomingItineraries.length == 0) {
