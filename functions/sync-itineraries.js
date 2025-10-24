@@ -50,8 +50,8 @@ exports.handler = async (event, context) => {
         var elementsToUpdate = [], elementsToCreate = [];
         for (var i = 0; i < incomingItineraries.length; i++) {
 			if(allExistingItinerariesOfUser.length > 0){
-				console.log("Checking itinerary with timestamp ", incomingItineraries[i].itineraryCreatedDate);
-				if (allExistingItinerariesOfUser[0].itinerary.some(el => el.itineraryCreatedDate === incomingItineraries[i].itineraryCreatedDate)) {
+				console.log("Checking itinerary with timestamp ", incomingItineraries[i].itenaryCreatedDate);
+				if (allExistingItinerariesOfUser[0].itinerary.some(el => el.itenaryCreatedDate === incomingItineraries[i].itenaryCreatedDate)) {
 					elementsToUpdate.push(incomingItineraries[i]);
 				} else {
 					elementsToCreate.push(incomingItineraries[i]);
