@@ -13,7 +13,7 @@ const getDb = async () => {
 
 exports.handler = async (event, context) => {
     try {
-		console.log("-----> Tsting this api is running or not");
+		console.log("-----> Tsting this api is running or not", event.body);
 
         const body = JSON.parse(event.body);
         
