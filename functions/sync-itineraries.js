@@ -18,8 +18,11 @@ exports.handler = async (event, context) => {
         const body = JSON.parse(event.body);
         
         if (!body.itineraries || !body.user_id) {
+			console.log("-----> Required fields missing: itineraries or user_id");
             return failedResponse("Required fields missing: itineraries or user_id");
-        }
+        }else{
+			console.log("-----> Found User ID", body.user_id);
+		}
         
         const incomingItineraries = body.itineraries;
         
